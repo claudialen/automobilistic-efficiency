@@ -8,7 +8,6 @@ using namespace std;
 ofstream out;
 
 using VI = vector<int>;
-using VVI = vector<VI>;
 using VB = vector<bool>;
 using VVB = vector<VB>;
 
