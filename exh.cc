@@ -12,90 +12,117 @@ using VVI = vector<VI>;
 using VB = vector<bool>;
 using VVB = vector<VB>;
 
+// variables globals de les dades inicials del problema
 VI ce, ne, produccio, solucio;
 VVB estacions;
-int penalitzacio_max;
-int classe;
+int pen_max, k, C, M, K;
 
-int penalitzacions(const VI& solparcial, const int& cotxes_constr)
+void sortida(string output, int inici, int pen_max)
 {
-    int p = 0;
-    for (int m = 0; m < estacions[0].size(); m++) {
+    ofstream out(output);
+    double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
+    out << pen_max << ' ' << temps << endl;
+    for (auto x : solucio)
+        out << solucio[x] << " ";
+    out << endl;
+    out.close();
+}
+
+VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
+{
+    // funcio que copia un interval de la solparcial al vector interval
+    VI interval;
+    int i = a, j = 0;
+    while (i < b and j < ne[m]) {
+        interval[j] = solparcial[i];
+        ++i, ++j;
+    }
+    return interval;
+}
+
+int penalitzacions(const VI& solparcial, const int& cotxes)
+{
+    // nombre de penalitzacions per afegir un nou cotxe a la solparcial
+    int pen = 0;
+    // prenem interval per comptar penalitzacions de la solucio solparcial
+    VI interval;
+    // per cada millora m recorrem totes les seves classes k
+    for (int m = 0; m < M; m++) {
         int cotxes_millora = 0;
-        if (cotxes_constr == solparcial.size()) {
-            for (int interval = ne[m]; interval > -1; interval--) {
-                VI finestra(interval) = solparcial [cotxes_constr - interval:cotxes_constr];
-                for (int classe = 0; classe < finestra.size() - 1; classe++) {
-                    if (estacions[finestra[classe]][m]) {
+        // si el nombre de cotxes construits equival al total a construir
+        if (cotxes == C) {
+            // afegim les penalitzacions de l'interval ne incomplet al final
+            for (int i = ne[m]; i > -1; i--) {
+                interval = setinterval(cotxes - i, cotxes, solparcial, m);
+
+                for (int k = 0; k < interval.size() - 1; k++) {
+                    if (estacions[interval[k]][m]) {
                         cotxes_millora++;
                     }
                 }
             }
 
         } else {
-            if (cotxes_constr - ne[m] <= 0) {
-                VI finestra(cotxes_constr) = solparcial;
+            // afegim les penalitzacions de l'interval ne incomplet a l'inici
+            if (cotxes - ne[m] <= 0) {
+                interval = solparcial;
             } else {
-                VI finestra(ne[m]) = solparcial [cotxes_constr - ne[m]:cotxes_constr];
+                interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
             }
-            for (int classe = 0; classe < finestra.size() - 1; classe++) {
-                if (estacions[finestra[classe]][m]) {
+            for (int k = 0; k < interval.size() - 1; k++) {
+                if (estacions[interval[k]][m]) {
                     cotxes_millora++;
                 }
             }
         }
-
-        if (millora > ce[m]) {
-            p += max(millora - ce[m], 0);
+        // si el nombre de cotxes consecutius és major que el màxim permès
+        if (cotxes_millora > ce[m]) {
+            pen += max(cotxes_millora - ce[m], 0);
         }
     }
-    return p;
+    return pen;
 }
 
-void sortida(string output, int inici, int penalitzacio_max)
+void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, const string& output)
 {
-    ofstream out(output);
-    double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
-    out << penalitzacio_max << ' ' << temps << endl;
-    out.close();
-}
-
-void backtrack(int& cotxes_constr, vector<int>& produccio,
-    vector<int>& solparcial, vector<int>& millores,
-    int& penalitzacio_act)
-{
-    if (penalitzacio_act >= penalitzacio_max)
+    // si la penalització de la solució actual és major que la màxima no seguim
+    if (pen_act >= pen_max)
         return;
-    if (cotxes_constr == solparcial.size()) {
-        penalitzacio_max = penalitzacions(solparcial, cotxes_constr);
+    // si el nombre de cotxes construits equival al total a construir
+    if (cotxes == solparcial.size()) {
+        pen_max = penalitzacions(solparcial, cotxes);
         solucio = solparcial;
-        sortida(output, inici, penalitzacio_max);
+        sortida(output, inici, pen_max);
     }
-    // per a cada estacio afegir si la classe te aquella millora
+    // per a cada estacio afegir si la classe k te aquella millora
     else {
-        int M = ce.size();
-        // classe es el punter que recorre totes les classes
-        for (int classe = 0; classe < produccio.size(); classe++) {
-            if (produccio[classe] > 0) {
-                produccio[classe]--;
-                solparcial[cotxes_constr] = classe;
-                penalitzacio_act = penalitzacions(solparcial, cotxes_constr);
-                backtrack(++cotxes_constr, produccio, solparcial, millores, penalitzacio_max);
-                produccio[classe]++;
-            } else if (penalitzacio_act >= penalitzacio_max)
-                backtrack(cotxes_constr, produccio, solparcial, millores, penalitzacio_max);
+        // k és el punter que recorre totes les classes
+        for (int k = 0; k < K; k++) {
+            // si encara queden cotxes a construir d'aquella classe k
+            if (produccio[k] > 0) {
+                produccio[k]--;
+
+                solparcial[cotxes] = k;
+                pen_act = penalitzacions(solparcial, cotxes);
+                backtrack(++cotxes, solparcial, pen_act, inici, output);
+
+                produccio[k]++;
+            } else if (pen_act >= pen_max)
+                backtrack(cotxes, solparcial, pen_act, inici, output);
         }
     }
 }
 
 int main(int argc, char** argv)
 {
+    // llegim input de fitxers
     int inici = clock();
     string input = string(argv[1]);
-    string output = string(arv[2]);
+    string output = string(argv[2]);
     ifstream f(input);
+    // ifstream inputFile(argv[1],ifstream::in);
+    // ifstream solFile(argv[2],ifstream::in);
 
-    int C, M, K;
     f >> C >> M >> K;
     // creacio vectors de millores, de la linia de produccio i de cada estacio
     ce = VI(M);
@@ -113,11 +140,12 @@ int main(int argc, char** argv)
         f >> ne[i];
     }
     for (int i = 0; i < K; i++) {
-        // identificador i nombre de cotxes de cada classe
+        // identificador i nombre de cotxes de cada classe k
+        int classe;
         f >> classe >> produccio[classe];
         for (int j = 2; j < M + 2; j++) {
             int aplica_millora;
-            // millores requerides per la classe
+            // millores requerides per la classe k
             f >> aplica_millora;
             if (aplica_millora)
                 estacions[i][j] = true;
@@ -125,6 +153,10 @@ int main(int argc, char** argv)
                 estacions[i][j] = false;
         }
     }
+    // definim la solucio parcial que utlitzara la funcio de backtracking
+    VI solparcial(C);
+    // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
+    backtrack(0, solparcial, 0, inici, output);
 
     f.close();
 }
