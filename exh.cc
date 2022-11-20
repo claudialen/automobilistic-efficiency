@@ -120,6 +120,7 @@ int main(int argc, char** argv)
     string input = string(argv[1]);
     string output = string(argv[2]);
     ifstream f(input);
+    // maybe s'ha de llegir aixi
     // ifstream inputFile(argv[1],ifstream::in);
     // ifstream solFile(argv[2],ifstream::in);
 
