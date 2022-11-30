@@ -93,7 +93,7 @@ int penalitzacions(const VI &solparcial, const int &cotxes)
             {
                 interval = setinterval(cotxes - i, cotxes, solparcial, m);
 
-                for (int k = 0; k < interval.size() - 1; k++)
+                for (int k = 0; k < int(interval.size()) - 1; k++)
                 {
                     if (estacions[interval[k]][m])
                     {
@@ -113,7 +113,7 @@ int penalitzacions(const VI &solparcial, const int &cotxes)
             {
                 interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
             }
-            for (int k = 0; k < interval.size() - 1; k++)
+            for (int k = 0; k < int(interval.size()) - 1; k++)
             {
                 if (estacions[interval[k]][m])
                 {
