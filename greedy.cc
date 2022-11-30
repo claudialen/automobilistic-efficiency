@@ -14,11 +14,11 @@ using VB = vector<bool>;
 using VVB = vector<VB>;
 
 // variables globals de les dades inicials del problema
-VI ce, ne, produccio, solucio;
+VI ce, ne, produccio;
 VVB estacions;
 int pen_max = 1000000, k, C, M, K;
 
-void sortida(string output, int inici, int pen_max)
+void sortida(string output, int inici, int pen_max, const VI& solucio)
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
@@ -45,7 +45,7 @@ VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
 int classe_escollida(VI millores_classe, int sol)
 {
     // trobem si hi ha valors de produccio igual i si no hi ha un valor
-    int max_prod = 0, escollida, classe;
+    int max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++) {
         if (produccio[i] > max_prod) {
             max_prod = produccio[i];
@@ -108,14 +108,12 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
     return pen;
 }
 
-void greedy(VI millores_classe, const int& inici, const string& output)
+void greedy(VI millores_classe, VI& solucio, const int& inici, const string& output)
 {
-    for (int i = 0; i < C; i++) {
-        if (i > 0) {
-            solucio.push_back(classe_escollida(millores_classe, solucio[i - 1]));
-        }
+    for (int i = 1; i < C; i++) {
+        solucio.push_back(classe_escollida(millores_classe, solucio[i - 1]));
     }
-    sortida(output, inici, penalitzacions(solucio, C));
+    sortida(output, inici, penalitzacions(solucio, C), solucio);
 }
 
 int main(int argc, char** argv)
@@ -162,9 +160,9 @@ int main(int argc, char** argv)
         }
     }
     // definim la solucio parcial que utlitzara la funcio de backtracking
-    VI solparcial(C);
+    VI solucio(C, 0);
     sort(millores_classe.begin(), millores_classe.end());
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
-    greedy(millores_classe, inici, output);
+    greedy(millores_classe, solucio, inici, output);
     f.close();
 }
