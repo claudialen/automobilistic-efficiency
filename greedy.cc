@@ -13,8 +13,9 @@ using VVI = vector<VI>;
 using VB = vector<bool>;
 using VVB = vector<VB>;
 
-struct class {
-    int id, millores;
+struct Klass
+{
+    int id, millores, produccio;
 };
 
 // variables globals de les dades inicials del problema
@@ -22,7 +23,7 @@ VI ce, ne, produccio;
 VVB estacions;
 int pen_max = 1000000, k, C, M, K;
 
-void sortida(string output, int inici, int pen_max, const VI& solucio)
+void sortida(string output, int inici, int pen_max, const VI &solucio)
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
@@ -33,12 +34,13 @@ void sortida(string output, int inici, int pen_max, const VI& solucio)
     out.close();
 }
 
-VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
+VI setinterval(const int &a, const int &b, const VI &solparcial, const int &m)
 {
     // funcio que copia un interval de la solparcial al vector interval
     VI interval;
     int i = a, j = 0;
-    while (i < b and j < ne[m]) {
+    while (i < b and j < ne[m])
+    {
         interval[j] = solparcial[i];
         ++i;
         ++j;
@@ -46,90 +48,156 @@ VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
     return interval;
 }
 
-int classe_escollida(VI millores_classe, int sol)
+int i_classe_anterior(int sol, vector<Klass> millores_classe)
+{
+    int i = 0;
+    while (millores_classe[i].id != sol)
+    {
+        i++;
+    }
+    return i;
+}
+
+int classe_escollida(const vector<Klass> &millores_classe, int sol)
 {
     // trobem si hi ha valors de produccio igual i si no hi ha un valor
     int max_prod = 0, escollida = 0, classe = 0;
-    for (int i = 0; i < K; i++) {
-        if (produccio[millores_classe[i].id] > max_prod) {
-            max_prod = produccio[millores_classe[i].id];
-            classe = millores_classe[i].id;
-            escollida = classe;
-        } else if (produccio[millores_classe[i].id] == max_prod) {
-            escollida = classe;
-            if (millores_classe[sol].millores >= millores_classe[classe].millores) {
-                if (millores_classe[i].millores < millores_classe[classe].millores) {
-                    escollida = millores_classe[i].id;
+    for (int i = 0; i < K; i++)
+    {
+        if (millores_classe[i].produccio != 0)
+        {
+            if (millores_classe[i].produccio > max_prod)
+            {
+                cout << "La produccio de la classe " << millores_classe[i].id << " (" << millores_classe[i].produccio << ") es major que la maxima (" << max_prod << ")" << endl;
+                max_prod = millores_classe[i].produccio;
+                cout << "Nova produccio maxima: " << max_prod << endl;
+                classe = millores_classe[i].id;
+                escollida = classe;
+                cout << "Classe escollida ara: " << escollida << endl;
+            }
+            else if (millores_classe[i].produccio == max_prod)
+            {
+                cout << "La produccio de la classe " << millores_classe[i].id << "(" << millores_classe[i].produccio << ") es igual a la maxima (" << max_prod << ")" << endl;
+                escollida = classe;
+                if (millores_classe[i_classe_anterior(sol, millores_classe)].millores >= millores_classe[classe].millores)
+                {
+                    cout << "La classe del cotxe anterior te les mateixes o mes millores que la escollida (" << classe << ")" << endl;
+                    if (millores_classe[i].millores < millores_classe[classe].millores)
+                    {
+                        cout << "La classe " << millores_classe[i].id << " te menys millores que la escollida (" << classe << ")" << endl;
+                        escollida = millores_classe[i].id;
+                        cout << "Classe escollida ara: " << escollida << endl;
+                    }
                 }
-            } else {
-                if (millores_classe[i].millores > millores_classe[classe].millores) {
-                    escollida = millores_classe[i].id;
+                else
+                {
+                    cout << "La classe del cotxe anterior te menys millores que la escollida (" << classe << ")" << endl;
+                    if (millores_classe[i].millores > millores_classe[classe].millores)
+                    {
+                        cout << "La classe " << millores_classe[i].id << " te mes millores que la escollida (" << classe << ")" << endl;
+                        escollida = millores_classe[i].id;
+                        cout << "Classe escollida ara: " << escollida << endl;
+                    }
                 }
             }
         }
     }
+    cout << "CLASSE ESCOLLIDA FINAL: " << escollida << endl;
     return escollida;
 }
-int penalitzacions(const VI& solparcial, const int& cotxes)
+int penalitzacions(const VI &solparcial, const int &cotxes)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
     int pen = 0;
     // prenem interval per comptar penalitzacions de la solucio solparcial
     VI interval;
     // per cada millora m recorrem totes les seves classes k
-    for (int m = 0; m < M; m++) {
+    for (int m = 0; m < M; m++)
+    {
         int cotxes_millora = 0;
         // si el nombre de cotxes construits equival al total a construir
-        if (cotxes == C) {
+        if (cotxes == C)
+        {
             // afegim les penalitzacions de l'interval ne incomplet al final
-            for (int i = ne[m]; i > -1; i--) {
+            for (int i = ne[m]; i > -1; i--)
+            {
                 interval = setinterval(cotxes - i, cotxes, solparcial, m);
 
-                for (int k = 0; k < int(interval.size()) - 1; k++) {
-                    if (estacions[interval[k]][m]) {
+                for (int k = 0; k < int(interval.size()) - 1; k++)
+                {
+                    if (estacions[interval[k]][m])
+                    {
                         cotxes_millora++;
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             // afegim les penalitzacions de l'interval ne incomplet a l'inici
-            if (cotxes - ne[m] <= 0) {
+            if (cotxes - ne[m] <= 0)
+            {
                 interval = solparcial;
-            } else {
+            }
+            else
+            {
                 interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
             }
-            for (int k = 0; k < int(interval.size()) - 1; k++) {
-                if (estacions[interval[k]][m]) {
+            for (int k = 0; k < int(interval.size()) - 1; k++)
+            {
+                if (estacions[interval[k]][m])
+                {
                     cotxes_millora++;
                 }
             }
         }
         // si el nombre de cotxes consecutius és major que el màxim permès
-        if (cotxes_millora > ce[m]) {
+        if (cotxes_millora > ce[m])
+        {
             pen += max(cotxes_millora - ce[m], 0);
         }
     }
     return pen;
 }
 
-void greedy(VI millores_classe, VI& solucio, const int& inici, const string& output)
+void greedy(vector<Klass> &millores_classe, VI &solucio, const int &inici, const string &output)
 {
-    for (int i = 0; i < C; i++) {
-        cout << "i: " << i << endl;
-        if (i == 0) {
+    for (int i = 0; i < C; i++)
+    {
+        if (i == 0)
+        {
+
+            int identificador;
+            for (int j = 0; j < millores_classe.size() - 1; j++)
+            {
+                if (millores_classe[j].produccio > millores_classe[j + 1].produccio)
+                {
+                    identificador = millores_classe[j].id;
+                }
+                else
+                {
+                    identificador = millores_classe[j + 1].id;
+                }
+            }
             solucio[i] = millores_classe[0].id;
+            millores_classe[0].produccio--;
         }
-        solucio[i] = classe_escollida(millores_classe, solucio[i - 1]);
+        else
+        {
+            int x = classe_escollida(millores_classe, solucio[i - 1]);
+            solucio[i] = x;
+            millores_classe[i_classe_anterior(x, millores_classe)].produccio--;
+        }
     }
     sortida(output, inici, penalitzacions(solucio, C), solucio);
 }
 
-bool SortMillores(const class& a, const class& b)
+bool SortMillores(const Klass &a, const Klass &b)
 {
     return a.millores > b.millores;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     // llegim input de fitxers
     int inici = clock();
@@ -144,33 +212,37 @@ int main(int argc, char** argv)
     // creacio vectors de millores, de la linia de produccio i de cada estacio
     ce = VI(M);
     ne = VI(M);
-    produccio = VI(K);
     estacions = VVB(K, VB(M, false));
-    vector<class> millores_classe(K);
+    vector<Klass> millores_classe(K);
 
     // inicialitzacio d'estructures
-    for (int i = 0; i < M; i++) {
+    for (int i = 0; i < M; i++)
+    {
         // capacitat de l'estacio
         f >> ce[i];
     }
-    for (int i = 0; i < M; i++) {
+    for (int i = 0; i < M; i++)
+    {
         // conjunt de cotxes consecutius maxim de cada estacio
         f >> ne[i];
     }
-    for (int i = 0; i < K; i++) {
+    for (int i = 0; i < K; i++)
+    {
         // identificador i nombre de cotxes de cada classe k
         int classe;
-        f >> classe >> produccio[classe];
-        millores_classe[i].id = classe;
-        for (int j = 0; j < M; j++) {
+        f >> classe >> millores_classe[classe].produccio;
+        millores_classe[classe].id = classe;
+        for (int j = 0; j < M; j++)
+        {
             int aplica_millora;
             // millores requerides per la classe k
             f >> aplica_millora;
-            if (aplica_millora) {
+            if (aplica_millora)
+            {
                 estacions[classe][j] = true;
                 millores_classe[classe].millores++;
-
-            } else
+            }
+            else
                 estacions[classe][j] = false;
         }
     }
@@ -178,6 +250,10 @@ int main(int argc, char** argv)
     VI solucio(C, 0);
     sort(millores_classe.begin(), millores_classe.end(), SortMillores);
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
+    for (int i = 0; i < K; i++)
+    {
+        cout << "Classe " << millores_classe[i].id << " necessita " << millores_classe[i].millores << " millores i s'han de produir " << millores_classe[i].produccio << " cotxes." << endl;
+    }
     greedy(millores_classe, solucio, inici, output);
     f.close();
 }
