@@ -69,13 +69,16 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
             }
 
         } else {
-            // afegim les penalitzacions de l'interval ne incomplet a l'inici
+            /* afegim les penalitzacions de l'interval ne incomplet a l'inici
             if (cotxes - ne[m] <= 0) {
+                cout << "in here" << endl;
                 interval = solparcial;
             } else {
-                interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
-            }
+
+            }*/
+            interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
             for (int k = 0; k < int(interval.size()) - 1; k++) {
+
                 if (estacions[interval[k]][m]) {
                     cotxes_millora++;
                 }
@@ -89,11 +92,12 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
     return pen;
 }
 
-void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, const string& output)
+void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, const string& output, VI& produccio)
 {
-    // si la penalització de la solució actual és major que la màxima no seguim
-    /*if (pen_act >= pen_max)
-        return;*/
+    /* si la penalització de la solució actual és major que la màxima no seguim
+    if (pen_act >= pen_max) {
+        return;
+    }*/
     // si el nombre de cotxes construits equival al total a construir
     if (cotxes == C) {
         pen_max = penalitzacions(solparcial, cotxes);
@@ -106,16 +110,15 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
         for (int k = 0; k < K; k++) {
             // si encara queden cotxes a construir d'aquella classe k
             if (produccio[k] > 0) {
-                produccio[k]--;
-
+                --produccio[k];
                 solparcial[cotxes] = k;
                 pen_act = penalitzacions(solparcial, cotxes);
                 if (pen_act >= pen_max) {
-                    backtrack(cotxes, solparcial, pen_act, inici, output);
-                    produccio[k]++;
+                    backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
+                    ++produccio[k];
                 } else {
-                    backtrack(++cotxes, solparcial, pen_act, inici, output);
-                    produccio[k]++;
+                    backtrack(++cotxes, solparcial, pen_act, inici, output, produccio);
+                    ++produccio[k];
                 }
             }
         }
@@ -164,7 +167,7 @@ int main(int argc, char** argv)
     VI solparcial(C);
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     int cotxes = 0, pen_act = 0;
-    backtrack(cotxes, solparcial, pen_act, inici, output);
+    backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
 
     f.close();
 }
