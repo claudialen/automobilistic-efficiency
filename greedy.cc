@@ -51,11 +51,6 @@ VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
         ++i;
         ++j;
     }
-    cout << "interval final" << ' ';
-    for (int j = 0; j < int(interval.size()); j++) {
-        cout << interval[j] << ' ';
-    }
-    cout << endl;
     return interval;
 }
 
@@ -92,7 +87,6 @@ int classe_escollida(const vector<Klass>& millores_classe, const int& sol)
             }
         }
     }
-    cout << "CLASSE ESCOLLIDA FINAL: " << escollida << endl;
     return escollida;
 }
 int penalitzacions(const VI& solparcial, const int& cotxes)
@@ -124,7 +118,6 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
             for (int k = 0; k < int(interval.size()); k++) {
                 if (estacions[interval[k]][m]) {
                     cotxes_millora++;
-                    cout << cotxes_millora << endl;
                 }
             }
         }
@@ -160,7 +153,6 @@ void greedy(vector<Klass>& millores_classe, VI& solucio, const int& inici, const
             millores_classe[i_classe_anterior(solucio[i], millores_classe)].produccio--;
         }
         pen_act += penalitzacions(solucio, i + 1);
-        cout << "penalitzacio acumulada " << pen_act << endl;
     }
     sortida(output, inici, pen_act, solucio);
 }
@@ -217,9 +209,6 @@ int main(int argc, char** argv)
     VI solucio(C, 0);
     sort(millores_classe.begin(), millores_classe.end(), SortMillores);
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
-    for (int i = 0; i < K; i++) {
-        cout << "Classe " << millores_classe[i].id << " necessita " << millores_classe[i].millores << " millores i s'han de produir " << millores_classe[i].produccio << " cotxes." << endl;
-    }
     greedy(millores_classe, solucio, inici, output);
     f.close();
 }
