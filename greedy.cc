@@ -13,6 +13,10 @@ using VVI = vector<VI>;
 using VB = vector<bool>;
 using VVB = vector<VB>;
 
+struct class {
+    int id, millores;
+};
+
 // variables globals de les dades inicials del problema
 VI ce, ne, produccio;
 VVB estacions;
@@ -47,19 +51,19 @@ int classe_escollida(VI millores_classe, int sol)
     // trobem si hi ha valors de produccio igual i si no hi ha un valor
     int max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++) {
-        if (produccio[i] > max_prod) {
-            max_prod = produccio[i];
-            classe = i;
+        if (produccio[millores_classe[i].id] > max_prod) {
+            max_prod = produccio[millores_classe[i].id];
+            classe = millores_classe[i].id;
             escollida = classe;
-        } else if (produccio[i] == max_prod) {
+        } else if (produccio[millores_classe[i].id] == max_prod) {
             escollida = classe;
-            if (millores_classe[sol] >= millores_classe[classe]) {
-                if (millores_classe[i] < millores_classe[classe]) {
-                    escollida = i;
+            if (millores_classe[sol].millores >= millores_classe[classe].millores) {
+                if (millores_classe[i].millores < millores_classe[classe].millores) {
+                    escollida = millores_classe[i].id;
                 }
             } else {
-                if (millores_classe[i] > millores_classe[classe]) {
-                    escollida = i;
+                if (millores_classe[i].millores > millores_classe[classe].millores) {
+                    escollida = millores_classe[i].id;
                 }
             }
         }
@@ -110,10 +114,19 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
 
 void greedy(VI millores_classe, VI& solucio, const int& inici, const string& output)
 {
-    for (int i = 1; i < C; i++) {
-        solucio.push_back(classe_escollida(millores_classe, solucio[i - 1]));
+    for (int i = 0; i < C; i++) {
+        cout << "i: " << i << endl;
+        if (i == 0) {
+            solucio[i] = millores_classe[0].id;
+        }
+        solucio[i] = classe_escollida(millores_classe, solucio[i - 1]);
     }
     sortida(output, inici, penalitzacions(solucio, C), solucio);
+}
+
+bool SortMillores(const class& a, const class& b)
+{
+    return a.millores > b.millores;
 }
 
 int main(int argc, char** argv)
@@ -133,7 +146,7 @@ int main(int argc, char** argv)
     ne = VI(M);
     produccio = VI(K);
     estacions = VVB(K, VB(M, false));
-    VI millores_classe(K, 0);
+    vector<class> millores_classe(K);
 
     // inicialitzacio d'estructures
     for (int i = 0; i < M; i++) {
@@ -148,20 +161,22 @@ int main(int argc, char** argv)
         // identificador i nombre de cotxes de cada classe k
         int classe;
         f >> classe >> produccio[classe];
+        millores_classe[i].id = classe;
         for (int j = 0; j < M; j++) {
             int aplica_millora;
             // millores requerides per la classe k
             f >> aplica_millora;
             if (aplica_millora) {
-                estacions[i][j] = true;
-                millores_classe[i]++;
+                estacions[classe][j] = true;
+                millores_classe[classe].millores++;
+
             } else
-                estacions[i][j] = false;
+                estacions[classe][j] = false;
         }
     }
     // definim la solucio parcial que utlitzara la funcio de backtracking
     VI solucio(C, 0);
-    sort(millores_classe.begin(), millores_classe.end());
+    sort(millores_classe.begin(), millores_classe.end(), SortMillores);
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     greedy(millores_classe, solucio, inici, output);
     f.close();
