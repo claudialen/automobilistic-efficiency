@@ -29,7 +29,7 @@ void sortida(string output, int inici, int pen_max, const VI &solucio)
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
     out << pen_max << ' ' << temps << endl;
     for (auto x : solucio)
-        out << solucio[x] << " ";
+        out << x << " ";
     out << endl;
     out.close();
 }
@@ -48,7 +48,7 @@ VI setinterval(const int &a, const int &b, const VI &solparcial, const int &m)
     return interval;
 }
 
-int i_classe_anterior(int sol, vector<Klass> millores_classe)
+int i_classe_anterior(const int &sol, const vector<Klass> &millores_classe)
 {
     int i = 0;
     while (millores_classe[i].id != sol)
@@ -58,7 +58,7 @@ int i_classe_anterior(int sol, vector<Klass> millores_classe)
     return i;
 }
 
-int classe_escollida(const vector<Klass> &millores_classe, int sol)
+int classe_escollida(const vector<Klass> &millores_classe, const int &sol)
 {
     // trobem si hi ha valors de produccio igual i si no hi ha un valor
     int max_prod = 0, escollida = 0, classe = 0;
@@ -164,19 +164,23 @@ void greedy(vector<Klass> &millores_classe, VI &solucio, const int &inici, const
                 {
                     identificador = millores_classe[j].id;
                 }
-                else
+                else if (millores_classe[j].produccio < millores_classe[j + 1].produccio)
                 {
                     identificador = millores_classe[j + 1].id;
                 }
+                else
+                {
+                    identificador = millores_classe[0].id;
+                }
             }
+
             solucio[i] = identificador;
             millores_classe[i_classe_anterior(identificador, millores_classe)].produccio--;
         }
         else
         {
-            int x = classe_escollida(millores_classe, solucio[i - 1]);
-            solucio[i] = x;
-            millores_classe[i_classe_anterior(x, millores_classe)].produccio--;
+            solucio[i] = classe_escollida(millores_classe, solucio[i - 1]);
+            millores_classe[i_classe_anterior(solucio[i], millores_classe)].produccio--;
         }
     }
     sortida(output, inici, penalitzacions(solucio, C), solucio);
