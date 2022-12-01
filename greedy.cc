@@ -68,35 +68,25 @@ int classe_escollida(const vector<Klass> &millores_classe, int sol)
         {
             if (millores_classe[i].produccio > max_prod)
             {
-                cout << "La produccio de la classe " << millores_classe[i].id << " (" << millores_classe[i].produccio << ") es major que la maxima (" << max_prod << ")" << endl;
                 max_prod = millores_classe[i].produccio;
-                cout << "Nova produccio maxima: " << max_prod << endl;
                 classe = millores_classe[i].id;
                 escollida = classe;
-                cout << "Classe escollida ara: " << escollida << endl;
             }
             else if (millores_classe[i].produccio == max_prod)
             {
-                cout << "La produccio de la classe " << millores_classe[i].id << "(" << millores_classe[i].produccio << ") es igual a la maxima (" << max_prod << ")" << endl;
                 escollida = classe;
                 if (millores_classe[i_classe_anterior(sol, millores_classe)].millores >= millores_classe[classe].millores)
                 {
-                    cout << "La classe del cotxe anterior te les mateixes o mes millores que la escollida (" << classe << ")" << endl;
                     if (millores_classe[i].millores < millores_classe[classe].millores)
                     {
-                        cout << "La classe " << millores_classe[i].id << " te menys millores que la escollida (" << classe << ")" << endl;
                         escollida = millores_classe[i].id;
-                        cout << "Classe escollida ara: " << escollida << endl;
                     }
                 }
                 else
                 {
-                    cout << "La classe del cotxe anterior te menys millores que la escollida (" << classe << ")" << endl;
                     if (millores_classe[i].millores > millores_classe[classe].millores)
                     {
-                        cout << "La classe " << millores_classe[i].id << " te mes millores que la escollida (" << classe << ")" << endl;
                         escollida = millores_classe[i].id;
-                        cout << "Classe escollida ara: " << escollida << endl;
                     }
                 }
             }
@@ -179,8 +169,8 @@ void greedy(vector<Klass> &millores_classe, VI &solucio, const int &inici, const
                     identificador = millores_classe[j + 1].id;
                 }
             }
-            solucio[i] = millores_classe[0].id;
-            millores_classe[0].produccio--;
+            solucio[i] = identificador;
+            millores_classe[i_classe_anterior(identificador, millores_classe)].produccio--;
         }
         else
         {
