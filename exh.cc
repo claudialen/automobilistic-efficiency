@@ -110,13 +110,13 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
             if (produccio[k] > 0) {
                 --produccio[k];
                 solparcial[cotxes] = k;
-                pen_act = penalitzacions(solparcial, cotxes);
+                pen_act += penalitzacions(solparcial, cotxes);
                 if (pen_act >= pen_max) {
                     backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
                 } else {
                     backtrack(++cotxes, solparcial, pen_act, inici, output, produccio);
                 }
-                ++produccio[k];
+                //++produccio[k];
             }
         }
     }
@@ -165,6 +165,5 @@ int main(int argc, char** argv)
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     int cotxes = 0, pen_act = 0;
     backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
-
     f.close();
 }
