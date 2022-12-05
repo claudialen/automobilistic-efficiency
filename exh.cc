@@ -98,9 +98,12 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
     }
     // si el nombre de cotxes construits equival al total a construir
     if (cotxes == C) {
-        pen_max = penalitzacions(solparcial, cotxes);
-        solucio = solparcial;
-        sortida(output, inici, pen_max);
+        pen_max += penalitzacions(solparcial, cotxes);
+        if (pen_act < pen_max) {
+            pen_max = pen_act;
+            solucio = solparcial;
+        }
+        
     }
     // per a cada estacio afegir si la classe k te aquella millora
     else {
@@ -165,5 +168,6 @@ int main(int argc, char** argv)
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     int cotxes = 0, pen_act = 0;
     backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
+    sortida(output, inici, pen_max);
     f.close();
 }
