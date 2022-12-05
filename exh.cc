@@ -103,7 +103,7 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
             pen_max = pen_act;
             solucio = solparcial;
         }
-        
+
     }
     // per a cada estacio afegir si la classe k te aquella millora
     else {
@@ -111,15 +111,17 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
         for (int k = 0; k < K; k++) {
             // si encara queden cotxes a construir d'aquella classe k
             if (produccio[k] > 0) {
-                --produccio[k];
+
                 solparcial[cotxes] = k;
                 pen_act += penalitzacions(solparcial, cotxes);
                 if (pen_act >= pen_max) {
+                    pen_act -= penalitzacions(solparcial, cotxes);
                     backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
                 } else {
+                    --produccio[k];
                     backtrack(++cotxes, solparcial, pen_act, inici, output, produccio);
+                    ++produccio[k];
                 }
-                //++produccio[k];
             }
         }
     }
