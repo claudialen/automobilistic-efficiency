@@ -90,12 +90,12 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
     return pen;
 }
 
-void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, const string& output, VI& produccio)
+void backtrack(int cotxes, VI& solparcial, int& pen_act, const int& inici, const string& output, VI& produccio)
 {
-    // si la penalització de la solució actual és major que la màxima no seguim
+    /* si la penalització de la solució actual és major que la màxima no seguim
     if (pen_act >= pen_max) {
         return;
-    }
+    }*/
     // si el nombre de cotxes construits equival al total a construir
     if (cotxes == C) {
         pen_max += penalitzacions(solparcial, cotxes);
@@ -111,17 +111,12 @@ void backtrack(int& cotxes, VI& solparcial, int& pen_act, const int& inici, cons
         for (int k = 0; k < K; k++) {
             // si encara queden cotxes a construir d'aquella classe k
             if (produccio[k] > 0) {
-
                 solparcial[cotxes] = k;
                 pen_act += penalitzacions(solparcial, cotxes);
-                if (pen_act >= pen_max) {
-                    pen_act -= penalitzacions(solparcial, cotxes);
-                    backtrack(cotxes, solparcial, pen_act, inici, output, produccio);
-                } else {
-                    --produccio[k];
-                    backtrack(++cotxes, solparcial, pen_act, inici, output, produccio);
-                    ++produccio[k];
-                }
+                --produccio[k];
+                backtrack(cotxes + 1, solparcial, pen_act, inici, output, produccio);
+                ++produccio[k];
+                pen_act -= penalitzacions(solparcial, cotxes);
             }
         }
     }
