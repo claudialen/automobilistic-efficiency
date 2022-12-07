@@ -13,16 +13,14 @@ using VVI = vector<VI>;
 using VB = vector<bool>;
 using VVB = vector<VB>;
 
+// estructura amb informació sobre cada classe
 struct Klass {
-    int id, millores, produccio;
+    int id, millores, prod;
 };
 
-// variables globals de les dades inicials del problema
-VI ce, ne, produccio;
-VVB estacions;
-int pen_max = 1000000, k, C, M, K;
+int MAX_VAL = 1000000;
 
-void sortida(string output, int inici, int pen_act, const VI& solucio)
+void sortida(string output, int inici, const int& pen_act, const VI& solucio)
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
@@ -33,7 +31,8 @@ void sortida(string output, int inici, int pen_act, const VI& solucio)
     out.close();
 }
 
-VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
+VI setinterval(const int& a, const int& b, const int& m, const VI& solparcial,
+    const VI& ne)
 {
     // funcio que copia un interval de la solparcial al vector interval
     // parametre m es la millora tractada
@@ -46,7 +45,7 @@ VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
     }
     VI interval;
     int i = x, j = 0;
-    while (i < y and j < ne[m]) {
+    while (i < b and j < ne[m]) {
         interval.push_back(solparcial[i]);
         ++i;
         ++j;
@@ -54,34 +53,35 @@ VI setinterval(const int& a, const int& b, const VI& solparcial, const int& m)
     return interval;
 }
 
-int i_classe_anterior(const int& sol, const vector<Klass>& millores_classe)
+int i_classe_anterior(const int& sol, const vector<Klass>& m_klass)
 {
     int i = 0;
-    while (millores_classe[i].id != sol) {
+    while (m_klass[i].id != sol) {
         i++;
     }
     return i;
 }
 
-int classe_escollida(const vector<Klass>& millores_classe, const int& sol)
+int classe_escollida(const vector<Klass>& m_klass, const int& sol)
 {
+    int K = m_klass.size();
     // trobem si hi ha valors de produccio igual i si no hi ha un valor
     int max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++) {
-        if (millores_classe[i].produccio != 0) {
-            if (millores_classe[i].produccio > max_prod) {
-                max_prod = millores_classe[i].produccio;
-                classe = millores_classe[i].id;
+        if (m_klass[i].prod != 0) {
+            if (m_klass[i].prod > max_prod) {
+                max_prod = m_klass[i].prod;
+                classe = m_klass[i].id;
                 escollida = classe;
-            } else if (millores_classe[i].produccio == max_prod) {
+            } else if (m_klass[i].prod == max_prod) {
                 escollida = classe;
-                if (millores_classe[i_classe_anterior(sol, millores_classe)].millores >= millores_classe[classe].millores) {
-                    if (millores_classe[i].millores < millores_classe[classe].millores) {
-                        escollida = millores_classe[i].id;
+                if (m_klass[i_classe_anterior(sol, m_klass)].millores >= m_klass[classe].millores) {
+                    if (m_klass[i].millores < m_klass[classe].millores) {
+                        escollida = m_klass[i].id;
                     }
                 } else {
-                    if (millores_classe[i].millores > millores_classe[classe].millores) {
-                        escollida = millores_classe[i].id;
+                    if (m_klass[i].millores > m_klass[classe].millores) {
+                        escollida = m_klass[i].id;
                     }
                 }
             }
@@ -89,12 +89,18 @@ int classe_escollida(const vector<Klass>& millores_classe, const int& sol)
     }
     return escollida;
 }
-int penalitzacions(const VI& solparcial, const int& cotxes)
+
+int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
+    const VI& ne, const VI& ce)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
     int pen = 0;
+    int M = ne.size();
+    int C = solucio.size();
+
     // vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
+
     // per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++) {
         int cotxes_millora = 0;
@@ -103,7 +109,7 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
         if (cotxes == C) {
             // afegim les penalitzacions de l'interval ne incomplet al final
             for (int i = ne[m]; i > -1; i--) {
-                interval = setinterval(cotxes - i, cotxes, solparcial, m);
+                interval = setinterval(cotxes - i, cotxes, m, solucio, ne);
                 // interval[k] sera una classe
                 for (int k = 0; k < int(interval.size()); k++) {
                     if (estacions[interval[k]][m]) {
@@ -114,7 +120,7 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
 
         } else {
             // afegim les penalitzacions de l'interval ne incomplet a l'inici
-            interval = setinterval(cotxes - ne[m], cotxes, solparcial, m);
+            interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
             for (int k = 0; k < int(interval.size()); k++) {
                 if (estacions[interval[k]][m]) {
                     cotxes_millora++;
@@ -129,32 +135,33 @@ int penalitzacions(const VI& solparcial, const int& cotxes)
     return pen;
 }
 
-void greedy(vector<Klass>& millores_classe, VI& solucio, const int& inici, const string& output)
+void greedy(int& pen_act, vector<Klass>& m_klass, VI& solucio,
+    const VVB& estacions, const VI& ne, const VI& ce)
 {
-    int pen_act = 0;
+    int C = solucio.size();
+    // comment
     for (int i = 0; i < C; i++) {
         if (i == 0) {
             int identificador;
-            for (int j = 0; j < millores_classe.size() - 1; j++) {
-                if (millores_classe[j].produccio > millores_classe[j + 1].produccio) {
-                    identificador = millores_classe[j].id;
-                } else if (millores_classe[j].produccio < millores_classe[j + 1].produccio) {
-                    identificador = millores_classe[j + 1].id;
+            for (int j = 0; j < m_klass.size() - 1; j++) {
+                if (m_klass[j].prod > m_klass[j + 1].prod) {
+                    identificador = m_klass[j].id;
+                } else if (m_klass[j].prod < m_klass[j + 1].prod) {
+                    identificador = m_klass[j + 1].id;
                 } else {
-                    identificador = millores_classe[0].id;
+                    identificador = m_klass[0].id;
                 }
             }
 
             solucio[i] = identificador;
-            millores_classe[i_classe_anterior(identificador, millores_classe)].produccio--;
+            m_klass[i_classe_anterior(identificador, m_klass)].prod--;
 
         } else {
-            solucio[i] = classe_escollida(millores_classe, solucio[i - 1]);
-            millores_classe[i_classe_anterior(solucio[i], millores_classe)].produccio--;
+            solucio[i] = classe_escollida(m_klass, solucio[i - 1]);
+            m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         }
-        pen_act += penalitzacions(solucio, i + 1);
+        pen_act += penalitzacions(i + 1, solucio, estacions, ne, ce);
     }
-    sortida(output, inici, pen_act, solucio);
 }
 
 bool SortMillores(const Klass& a, const Klass& b)
@@ -173,12 +180,14 @@ int main(int argc, char** argv)
     // ifstream inputFile(argv[1],ifstream::in);
     // ifstream solFile(argv[2],ifstream::in);
 
+    int C, M, K;
     f >> C >> M >> K;
-    // creacio vectors de millores, de la linia de produccio i de cada estacio
-    ce = VI(M);
-    ne = VI(M);
-    estacions = VVB(K, VB(M, false));
-    vector<Klass> millores_classe(K);
+    // creacio vectors de millores, matriu booleana de cada estacio i vector de
+    // l'estructura Klass amb les millores de cada classe
+    VI ce = VI(M);
+    VI ne = VI(M);
+    VVB estacions = VVB(K, VB(M, false));
+    vector<Klass> m_klass(K);
 
     // inicialitzacio d'estructures
     for (int i = 0; i < M; i++) {
@@ -192,23 +201,25 @@ int main(int argc, char** argv)
     for (int i = 0; i < K; i++) {
         // identificador i nombre de cotxes de cada classe k
         int classe;
-        f >> classe >> millores_classe[classe].produccio;
-        millores_classe[classe].id = classe;
+        f >> classe >> m_klass[classe].prod;
+        m_klass[classe].id = classe;
         for (int j = 0; j < M; j++) {
             int aplica_millora;
             // millores requerides per la classe k
             f >> aplica_millora;
             if (aplica_millora) {
                 estacions[classe][j] = true;
-                millores_classe[classe].millores++;
+                m_klass[classe].millores++;
             } else
                 estacions[classe][j] = false;
         }
     }
     // definim la solucio parcial que utlitzara la funcio de backtracking
     VI solucio(C, 0);
-    sort(millores_classe.begin(), millores_classe.end(), SortMillores);
+    int pen_act = 0;
+    sort(m_klass.begin(), m_klass.end(), SortMillores);
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
-    greedy(millores_classe, solucio, inici, output);
+    greedy(pen_act, m_klass, solucio, estacions, ne, ce);
+    sortida(output, inici, pen_act, solucio);
     f.close();
 }
