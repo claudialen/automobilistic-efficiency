@@ -31,8 +31,7 @@ void sortida(string output, int inici, const int& pen_act, const VI& solucio)
     out.close();
 }
 
-VI setinterval(const int& a, const int& b, const int& m, const VI& solparcial,
-    const VI& ne)
+VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
 {
     // funcio que copia un interval de la solparcial al vector interval
     // parametre m es la millora tractada
@@ -53,7 +52,7 @@ VI setinterval(const int& a, const int& b, const int& m, const VI& solparcial,
     return interval;
 }
 
-int i_classe_anterior(const int& sol, const vector<Klass>& m_klass)
+int i_classe_anterior(int sol, const vector<Klass>& m_klass)
 {
     int i = 0;
     while (m_klass[i].id != sol) {
@@ -104,27 +103,11 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
     // per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++) {
         int cotxes_millora = 0;
-        // si el nombre de cotxes construits equival al total a construir
-        // si la solucio parcial es completa
-        if (cotxes == C) {
-            // afegim les penalitzacions de l'interval ne incomplet al final
-            for (int i = ne[m]; i > -1; i--) {
-                interval = setinterval(cotxes - i, cotxes, m, solucio, ne);
-                // interval[k] sera una classe
-                for (int k = 0; k < int(interval.size()); k++) {
-                    if (estacions[interval[k]][m]) {
-                        cotxes_millora++;
-                    }
-                }
-            }
-
-        } else {
-            // afegim les penalitzacions de l'interval ne incomplet a l'inici
-            interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
-            for (int k = 0; k < int(interval.size()); k++) {
-                if (estacions[interval[k]][m]) {
-                    cotxes_millora++;
-                }
+        // afegim les penalitzacions de l'interval ne incomplet a l'inici
+        interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
+        for (int k = 0; k < int(interval.size()); k++) {
+            if (estacions[interval[k]][m]) {
+                cotxes_millora++;
             }
         }
         // si el nombre de cotxes consecutius és major que el màxim permès
