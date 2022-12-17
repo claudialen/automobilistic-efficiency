@@ -1,9 +1,9 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cmath>
 
 using namespace std;
 
@@ -16,7 +16,7 @@ using VVB = vector<VB>;
 
 int MAX_VAL = 1000000;
 
-void sortida(string output, int inici, int pen_max, const VI &solucio)
+void sortida(string output, int inici, int pen_max, const VI& solucio)
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
@@ -27,8 +27,29 @@ void sortida(string output, int inici, int pen_max, const VI &solucio)
     out.close();
 }
 
-int penalitzacions(int cotxes, const VI &solparcial, const VVB &estacions,
-                   const VI &ne, const VI &ce)
+VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
+{
+    // funcio que copia un interval de la solparcial al vector interval
+    // parametre m es la millora tractada
+    int x = a, y = b;
+    if (a < 0) {
+        x = 0;
+    }
+    if (b == 0) {
+        y = 1;
+    }
+    VI interval;
+    int i = x, j = 0;
+    while (i < b and j < ne[m]) {
+        interval.push_back(solparcial[i]);
+        ++i;
+        ++j;
+    }
+    return interval;
+}
+
+int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
+    const VI& ne, const VI& ce)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
     int pen = 0;
@@ -39,60 +60,70 @@ int penalitzacions(int cotxes, const VI &solparcial, const VVB &estacions,
     VI interval;
 
     // per cada millora m recorrem totes les seves classes k
-    for (int m = 0; m < M; m++)
-    {
+    for (int m = 0; m < M; m++) {
         int cotxes_millora = 0;
         // mirem si l'interval ne té penalitzacions
         interval = setinterval(cotxes - ne[m], cotxes, m, solparcial, ne);
-        for (int k = 0; k < int(interval.size()); k++)
-        {
-            if (estacions[interval[k]][m])
-            {
+        for (int k = 0; k < int(interval.size()); k++) {
+            if (estacions[interval[k]][m]) {
                 cotxes_millora++;
             }
         }
 
         // si el nombre de cotxes consecutius és major que el màxim permès
-        if (cotxes_millora > ce[m])
-        {
+        if (cotxes_millora > ce[m]) {
             pen += max(cotxes_millora - ce[m], 0);
         }
     }
     return pen;
 }
 
-bool features(int i, VI solparcial)
+/*bool features(int i, VI solparcial)
 {
     return;
-}
+}*/
 
-int f_i(int f, int phi, VI penalitzacio, VI solparcial)
+int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
 {
+    // Funcio que calcula la nova funció objectiu
     int sum = 0;
-    for (int i = 0; i < penalitzacio.size(); i++)
-    {
-        sum += penalitzacio[i] * features(i, solparcial);
+    int M = penalitzacio.size();
+    for (int i = 0; i < M; i++) {
+        // solparcial[i] = una class 0,1,...,K
+        sum += penalitzacio[i] * estacions[solparcial[i]][i];
     }
-    return f + phi * sum;
+    // no se quin regularization factor (lambda) definir
+    return f + lambda * sum;
 }
 
-void guided_local_search(int cotxes, int C, VI solparcial, VI solucio)
+void guided_local_search(int cotxes, int M, VI& solparcial, VI& solucio,
+    int pen_act, int& pen_max, const VVB& estacions, const VI& ne, const VI& ce)
 {
+    int C = solparcial.size();
+    // solparcial és la solucio actual i solucio és la millor fins al moment sobre f
     solucio = solparcial;
     f = ; // ns si hauriem d definir aqui f o utilitzar nomes la inicial
-    // m = numero de propietats diferents entre solucions
-    VI penalitzacio(m, 0);
-    while (cotxes < C)
-    {
-        s_f = localSearch(solparcial, f_i(f, phi, penalitzacio, features), f);
-        if (f(s_f) < f(solucio))
-        {
+    // M = numero de propietats diferents entre solucions
+    VI penalitzacio(M, 0);
+    while (cotxes < C) {
+        // Millor solució fins al moment sobre la funció objectiu original
+        s_f = localSearch(solparcial, f);
+        // Busquem solparcial amb local search per optimitzar f_i
+        solparcial = localSearch(solparcial, f_i(f, lambda, penalitzacio, features));
+        if (f(s_f) < f(solucio)) {
             solucio = s_f;
         }
+        // Actualitzar vector de penalitzacions
+        penalitzacio[cotxes] = penalitzacions(cotxes, solparcial, estacions, ne, ce);
+        pen_act += penalitzacio[cotxes];
+        ++cotxes;
     }
+    // només arribem aquí si ja s'ha fet la solucio sencera
+    if (pen_max > pen_act)
+        pen_max = pen_act;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     // llegim input de fitxers
     int inici = clock();
@@ -109,23 +140,19 @@ int main(int argc, char **argv)
     VVB estacions = VVB(K, VB(M, false));
 
     // inicialitzacio d'estructures
-    for (int i = 0; i < M; i++)
-    {
+    for (int i = 0; i < M; i++) {
         // capacitat de l'estacio
         f >> ce[i];
     }
-    for (int i = 0; i < M; i++)
-    {
+    for (int i = 0; i < M; i++) {
         // conjunt de cotxes consecutius maxim de cada estacio
         f >> ne[i];
     }
-    for (int i = 0; i < K; i++)
-    {
+    for (int i = 0; i < K; i++) {
         // identificador i nombre de cotxes de cada classe k
         int classe;
         f >> classe >> produccio[classe];
-        for (int j = 0; j < M; j++)
-        {
+        for (int j = 0; j < M; j++) {
             int aplica_millora;
             // millores requerides per la classe k
             f >> aplica_millora;
@@ -141,8 +168,8 @@ int main(int argc, char **argv)
 
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     int cotxes = 0, pen_act = 0, pen_max = MAX_VAL;
-    guided_local_search(cotxes, C, solparcial, solucio, pen_act, pen_max, produccio, ne, ce,
-                        estacions);
+    guided_local_search(cotxes, M, solparcial, solucio, pen_act, pen_max,
+        estacions, ne, ce);
     sortida(output, inici, pen_max, solucio);
     f.close();
 }
