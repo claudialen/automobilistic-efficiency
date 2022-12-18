@@ -82,19 +82,19 @@ int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
     return pen;
 }
 
-int f(const VI& produccio){
-    int k=0;
-    int P=produccio.size();
-    for(int i=1;i<P;i++){
-        if(produccio[i]>produccio[k]){
-            k=i;
+int f(const VI& produccio)
+{
+    int k = 0;
+    int P = produccio.size();
+    for (int i = 1; i < P; i++) {
+        if (produccio[i] > produccio[k]) {
+            k = i;
         }
     }
     return k;
 }
 
-
-int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
+int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial, const VVB& estacions)
 {
     // Funcio que calcula la nova funció objectiu
     int sum = 0;
@@ -107,10 +107,11 @@ int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
     return f + lambda * sum;
 }
 
-VI generar_solucio(VI produccio){
+VI generar_solucio(VI produccio)
+{
     VI solinicial;
-    for(int i=0;i<produccio.size();i++){
-        while(produccio[i]>0){
+    for (int i = 0; i < produccio.size(); i++) {
+        while (produccio[i] > 0) {
             solinicial.push_back(i);
             produccio[i]--;
         }
@@ -118,43 +119,52 @@ VI generar_solucio(VI produccio){
     return solinicial;
 }
 
-
-void localSearch(VI& solparcial, int& pen, const int& cotxes, const VII& estacions, const VI& ne, const VI& ce){
+VI localSearch(VI solparcial, int& pen, const int& cotxes, const VVB& estacions, const VI& ne, const VI& ce)
+{
     VI neighbourhood = solparcial;
-    int C=solparcial.size();
-    for(int i=0;i<C;i++){
+    int C = solparcial.size();
+    int pen_n = 0;
+    for (int i = 0; i < C; i++) {
         swap(neighbourhood[cotxes], neighbourhood[i]);
-        pen_n=0;
-        for(int j=0;j<C;j++){
-            pen_n+=penalitzacions(C,neighbourhood,estacions,ne,ce);
+
+        for (int j = 0; j < C; j++) {
+            pen_n += penalitzacions(j, neighbourhood, estacions, ne, ce);
         }
-        if(pen_n<pen){
-            solparcial=neighbourhood;
-            pen=pen_n;
+        if (pen_n < pen) {
+            solparcial = neighbourhood;
+            pen = pen_n;
         }
     }
+    return solparcial;
 }
 
-void guided_local_search(int cotxes, VI& solparcial, VI& solucio,
+void guided_local_search(int cotxes, VI& solparcial, VI& solucio, VI& produccio,
     int pen_act, int& pen_max, const VVB& estacions, const VI& ne, const VI& ce)
 {
-    solparcial=generar_solucio(produccio);
+    solparcial = generar_solucio(produccio);
     int C = solparcial.size();
+    for (int j = 0; j < C; j++) {
+        pen_act += penalitzacions(j, solparcial, estacions, ne, ce);
+    }
     // solparcial és la solucio actual i solucio és la millor fins al moment sobre f
     // M = numero de propietats diferents entre solucions
     VI penalitzacio(C, 0);
-    int pen_max=f_i(pen_act,lambda, penalitzacio, estacions);
+    int lambda = 0;
+    pen_max = f_i(pen_act, lambda, penalitzacio, solparcial, estacions);
     while (cotxes < C) {
         // Millor solució fins al moment sobre la funció objectiu original
-        s_f = localSearch(solparcial, pen_max,cotxes, estacions,ne, ce);
+        VI s_f = localSearch(solparcial, pen_max, cotxes, estacions, ne, ce);
         // Busquem solparcial amb local search per optimitzar f_i
-        solparcial = localSearch(solparcial, pen_act,cotxes,estacions, ne, ce);
+        solparcial = localSearch(solparcial, pen_act, cotxes, estacions, ne, ce);
         if (pen_max > pen_act) {
-            pen_max=pen_act;
+            pen_max = pen_act;
+            solucio = solparcial;
+        } else {
             solucio = s_f;
         }
         // Actualitzar vector de penalitzacions
         penalitzacio[cotxes] = penalitzacions(cotxes, solparcial, estacions, ne, ce);
+        pen_act += penalitzacio[cotxes];
         ++cotxes;
     }
 }
@@ -204,7 +214,7 @@ int main(int argc, char** argv)
 
     // inicialitzem el nombre de cotxes construits i de penalitzacions a 0
     int cotxes = 0, pen_act = 0, pen_max = MAX_VAL;
-    guided_local_search(cotxes, M, solparcial, solucio, pen_act, pen_max,
+    guided_local_search(cotxes, solparcial, solucio, produccio, pen_act, pen_max,
         estacions, ne, ce);
     sortida(output, inici, pen_max, solucio);
     f.close();
