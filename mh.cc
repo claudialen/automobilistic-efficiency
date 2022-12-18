@@ -16,6 +16,10 @@ using VVB = vector<VB>;
 
 int MAX_VAL = 1000000;
 
+struct Klass {
+    int id, millores, prod;
+};
+
 void sortida(string output, int inici, int pen_max, const VI& solucio)
 {
     ofstream out(output);
@@ -78,10 +82,17 @@ int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
     return pen;
 }
 
-/*bool features(int i, VI solparcial)
-{
-    return;
-}*/
+int f(const VI& produccio){
+    int k=0;
+    int P=produccio.size();
+    for(int i=1;i<P;i++){
+        if(produccio[i]>produccio[k]){
+            k=i;
+        }
+    }
+    return k;
+}
+
 
 int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
 {
@@ -96,13 +107,15 @@ int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
     return f + lambda * sum;
 }
 
+
+//f(x) = penalitzacio total
 void guided_local_search(int cotxes, int M, VI& solparcial, VI& solucio,
     int pen_act, int& pen_max, const VVB& estacions, const VI& ne, const VI& ce)
 {
     int C = solparcial.size();
     // solparcial és la solucio actual i solucio és la millor fins al moment sobre f
     solucio = solparcial;
-    f = ; // ns si hauriem d definir aqui f o utilitzar nomes la inicial
+    f =; // ns si hauriem d definir aqui f o utilitzar nomes la inicial
     // M = numero de propietats diferents entre solucions
     VI penalitzacio(M, 0);
     while (cotxes < C) {
