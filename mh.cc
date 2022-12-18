@@ -107,33 +107,56 @@ int f_i(int f, int lambda, VI& penalitzacio, VI& solparcial)
     return f + lambda * sum;
 }
 
+VI generar_solucio(VI produccio){
+    VI solinicial;
+    for(int i=0;i<produccio.size();i++){
+        while(produccio[i]>0){
+            solinicial.push_back(i);
+            produccio[i]--;
+        }
+    }
+    return solinicial;
+}
 
-//f(x) = penalitzacio total
-void guided_local_search(int cotxes, int M, VI& solparcial, VI& solucio,
+
+void localSearch(VI& solparcial, int& pen, const int& cotxes, const VII& estacions, const VI& ne, const VI& ce){
+    VI neighbourhood = solparcial;
+    int C=solparcial.size();
+    for(int i=0;i<C;i++){
+        swap(neighbourhood[cotxes], neighbourhood[i]);
+        pen_n=0;
+        for(int j=0;j<C;j++){
+            pen_n+=penalitzacions(C,neighbourhood,estacions,ne,ce);
+        }
+        if(pen_n<pen){
+            solparcial=neighbourhood;
+            pen=pen_n;
+        }
+    }
+}
+
+void guided_local_search(int cotxes, VI& solparcial, VI& solucio,
     int pen_act, int& pen_max, const VVB& estacions, const VI& ne, const VI& ce)
 {
+    solparcial=generar_solucio(produccio);
     int C = solparcial.size();
     // solparcial és la solucio actual i solucio és la millor fins al moment sobre f
-    solucio = solparcial;
-    f =; // ns si hauriem d definir aqui f o utilitzar nomes la inicial
     // M = numero de propietats diferents entre solucions
-    VI penalitzacio(M, 0);
+    VI penalitzacio(C, 0);
+    int pen_max=f_i(pen_act,lambda, penalitzacio, estacions);
     while (cotxes < C) {
         // Millor solució fins al moment sobre la funció objectiu original
-        s_f = localSearch(solparcial, f);
+        s_f = localSearch(solparcial, pen_max,cotxes, estacions,ne, ce);
         // Busquem solparcial amb local search per optimitzar f_i
-        solparcial = localSearch(solparcial, f_i(f, lambda, penalitzacio, features));
-        if (f(s_f) < f(solucio)) {
+        solparcial = localSearch(solparcial, pen_act,cotxes,estacions, ne, ce);
+        if (pen_max > pen_act) {
+            pen_max=pen_act;
             solucio = s_f;
         }
         // Actualitzar vector de penalitzacions
         penalitzacio[cotxes] = penalitzacions(cotxes, solparcial, estacions, ne, ce);
-        pen_act += penalitzacio[cotxes];
         ++cotxes;
     }
-    // només arribem aquí si ja s'ha fet la solucio sencera
-    if (pen_max > pen_act)
-        pen_max = pen_act;
 }
 
 int main(int argc, char** argv)
