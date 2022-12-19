@@ -71,7 +71,7 @@ int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
 
         // si el nombre de cotxes consecutius és major que el màxim permès
         if (cotxes_millora > ce[m]) {
-            pen += max(cotxes_millora - ce[m], 0);
+            pen += cotxes_millora - ce[m];
         }
     }
     return pen;
