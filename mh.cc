@@ -221,7 +221,7 @@ void guided_local_search(int cotxes, VI& solparcial, VI& solucio, vector<Klass> 
     // solparcial és la solucio actual i solucio és la millor fins al moment sobre f
     // M = numero de propietats diferents entre solucions
     VI penalitzacio(C, 0);
-    double lambda = 0.2;
+    double lambda = 0.1;
     pen_max = f_i(pen_act, lambda, penalitzacio, solparcial, estacions);
     while (cotxes < C) {
         // Millor solució fins al moment sobre la funció objectiu original
