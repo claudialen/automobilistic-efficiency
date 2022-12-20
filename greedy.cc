@@ -145,7 +145,7 @@ void greedy(int& pen_act, vector<Klass>& m_klass, VI& solucio,
 
 bool SortMillores(const Klass& a, const Klass& b)
 {
-    return a.millores > b.millores;
+    return a.millores < b.millores;
 }
 
 int main(int argc, char** argv)
