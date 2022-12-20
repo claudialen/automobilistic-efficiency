@@ -39,15 +39,11 @@ VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
     if (a < 0) {
         x = 0;
     }
-    if (b == 0) {
-        y = 1;
-    }
     VI interval;
-    int i = x, j = 0;
-    while (i < b and j < ne[m]) {
+    int i = x;
+    while (i < b) {
         interval.push_back(solparcial[i]);
         ++i;
-        ++j;
     }
     return interval;
 }
