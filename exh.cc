@@ -98,6 +98,7 @@ void backtrack(const int& inici, string& output, int cotxes, VI& solparcial, VI&
             // si encara queden cotxes a construir d'aquella classe k
             if (produccio[k] > 0) {
                 solparcial[cotxes] = k;
+                // Passem cotxes + 1 perquè ja hem afegit un cotxe a la solparcial
                 pen_act += penalitzacions(cotxes + 1, solparcial, estacions, ne, ce);
                 --produccio[k];
                 backtrack(inici, output, cotxes + 1, solparcial, solucio, pen_act, pen_max,
