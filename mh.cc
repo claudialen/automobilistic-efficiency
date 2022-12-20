@@ -113,20 +113,46 @@ int penalitzacions(int cotxes, const VI &solucio, const VVB &estacions,
     // per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++)
     {
-        int cotxes_millora = 0;
-        // afegim les penalitzacions de l'interval ne incomplet a l'inici
-        interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
-        for (int k = 0; k < int(interval.size()); k++)
+        if (cotxes == C)
         {
-            if (estacions[interval[k]][m])
+            for (int i = cotxes - ne[m]; i < cotxes; i++)
             {
-                cotxes_millora++;
+                int cotxes_millora = 0;
+                // mirem si l'interval ne té penalitzacions
+                interval = setinterval(i, cotxes, m, solparcial, ne);
+                for (int k = 0; k < int(interval.size()); k++)
+                {
+                    if (estacions[interval[k]][m])
+                    {
+                        cotxes_millora++;
+                    }
+                }
+
+                // si el nombre de cotxes consecutius és major que el màxim permès
+                if (cotxes_millora > ce[m])
+                {
+                    pen += cotxes_millora - ce[m];
+                }
             }
         }
-        // si el nombre de cotxes consecutius és major que el màxim permès
-        if (cotxes_millora > ce[m])
+        else
         {
-            pen += max(cotxes_millora - ce[m], 0);
+            int cotxes_millora = 0;
+            // mirem si l'interval ne té penalitzacions
+            interval = setinterval(cotxes - ne[m], cotxes, m, solparcial, ne);
+            for (int k = 0; k < int(interval.size()); k++)
+            {
+                if (estacions[interval[k]][m])
+                {
+                    cotxes_millora++;
+                }
+            }
+
+            // si el nombre de cotxes consecutius és major que el màxim permès
+            if (cotxes_millora > ce[m])
+            {
+                pen += cotxes_millora - ce[m];
+            }
         }
     }
     return pen;
