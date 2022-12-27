@@ -43,21 +43,19 @@ parcial i vector de nombre màxim de millores ne.
 */
 VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
 {
-    int x = a, y = b;
     if (a < 0) {
         // Si la posició inicial és menor que 0, redefinim x=0
-        x = 0;
+        a = 0;
     }
     VI interval;
-    int i = x;
-    while (i < b) {
-        interval.push_back(solparcial[i]);
-        ++i;
+    while (a < b) {
+        interval.push_back(solparcial[a]);
+        ++a;
     }
     return interval;
 }
 
-/* Funció que calcula el nombre de penalitzacions. */
+/* Funció que calcula la penalització total de la solució actual. */
 int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
     const VI& ne, const VI& ce)
 {
@@ -81,7 +79,7 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
         }
         // si el nombre de cotxes consecutius és major que el màxim permès
         if (cotxes_millora > ce[m]) {
-            pen += max(cotxes_millora - ce[m], 0);
+            pen += cotxes_millora - ce[m];
         }
     }
     return pen;
@@ -90,12 +88,12 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
 /* Funció que escull la classe m_klass segons els criteris del greedy. */
 int classe_escollida(const vector<Klass>& m_klass, const int& sol)
 {
-    int K = m_klass.size();
-    // trobem si hi ha valors de produccio igual i si no hi ha un valor
-    int max_prod = 0, escollida = 0, classe = 0;
+    int K = m_klass.size(), max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++) {
-        if (m_klass[i].prod != 0) {
+        //per cada classe mirem si encara queden cotxes per produir
+        if (m_klass[i].prod > 0) {
             if (m_klass[i].prod > max_prod) {
+                //si són més del maxim trobat fins el moment  
                 max_prod = m_klass[i].prod;
                 classe = m_klass[i].id;
                 escollida = classe;
