@@ -55,31 +55,44 @@ VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
     return interval;
 }
 
-/* Funció que calcula la penalització total de la solució actual. */
-int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
+/* Funció que calcula el nombre de penalitzacions. */
+int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
     const VI& ne, const VI& ce)
 {
-    // nombre de penalitzacions per afegir un nou cotxe a la solparcial
-    int pen = 0;
-    int M = ne.size();
-    int C = solucio.size();
+    // Nombre de penalitzacions per afegir un nou cotxe a la solparcial
+    int pen = 0, M = ne.size(), C = solparcial.size();
 
-    // vector de classes a comptar penalitzacions de la solucio solparcial
+    // Vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
-
-    // per cada millora m recorrem totes les seves classes k
+    // Per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++) {
         int cotxes_millora = 0;
-        // afegim les penalitzacions de l'interval ne incomplet a l'inici
-        interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
-        for (int k = 0; k < int(interval.size()); k++) {
-            if (estacions[interval[k]][m]) {
-                cotxes_millora++;
+        if (cotxes == C) {
+            for (int i = cotxes - ne[m]; i < cotxes; i++) {
+                cotxes_millora = 0;
+                // Mirem si l'interval ne té penalitzacions
+                interval = setinterval(i, cotxes, m, solparcial, ne);
+                for (int k = 0; k < int(interval.size()); k++) {
+                    if (estacions[interval[k]][m]) {
+                        cotxes_millora++;
+                    }
+                }
+
+                // Nombre de cotxes consecutius és major que el màxim permès
+                if (cotxes_millora > ce[m]) {
+                    pen += cotxes_millora - ce[m];
+                }
             }
-        }
-        // si el nombre de cotxes consecutius és major que el màxim permès
-        if (cotxes_millora > ce[m]) {
-            pen += cotxes_millora - ce[m];
+        } else {
+            interval = setinterval(cotxes - ne[m], cotxes, m, solparcial, ne);
+            for (int k = 0; k < int(interval.size()); k++) {
+                if (estacions[interval[k]][m]) {
+                    cotxes_millora++;
+                }
+            }
+            if (cotxes_millora > ce[m]) {
+                pen += cotxes_millora - ce[m];
+            }
         }
     }
     return pen;
@@ -93,17 +106,18 @@ int classe_escollida(const vector<Klass>& m_klass, const int& sol)
         //per cada classe mirem si encara queden cotxes per produir
         if (m_klass[i].prod > 0) {
             if (m_klass[i].prod > max_prod) {
-                //si són més del maxim trobat fins el moment  
+                //si són més del maxim trobat fins el moment es canvien els valors de max_prod i escollida
                 max_prod = m_klass[i].prod;
-                classe = m_klass[i].id;
-                escollida = classe;
+                escollida = classe = m_klass[i].id;
             } else if (m_klass[i].prod == max_prod) {
-                escollida = classe;
+                //si són els mateixos mirem si la classe del cotxe anterior requeria més millores
                 if (m_klass[i_classe_anterior(sol, m_klass)].millores >= m_klass[classe].millores) {
+                    //mirem si la classe que volem colocar té més millores que la i
                     if (m_klass[i].millores < m_klass[classe].millores) {
                         escollida = m_klass[i].id;
                     }
                 } else {
+                    //si no requeria més i té menys millores que la i actualitzem escollida
                     if (m_klass[i].millores > m_klass[classe].millores) {
                         escollida = m_klass[i].id;
                     }
@@ -118,38 +132,35 @@ int classe_escollida(const vector<Klass>& m_klass, const int& sol)
 vector de solució. */
 int i_classe_anterior(int sol, const vector<Klass>& m_klass)
 {
-    int i = 0;
+    int i = 0; //contador
     while (m_klass[i].id != sol) {
         i++;
     }
     return i;
 }
 
+/*Funció principal de l'algoritme greedy*/
 void greedy(int& pen_act, vector<Klass>& m_klass, VI& solucio,
     const VVB& estacions, const VI& ne, const VI& ce)
 {
     int C = solucio.size();
-    // comment
     for (int i = 0; i < C; i++) {
         if (i == 0) {
-            int identificador;
+            // Si estem colocant el primer cotxe ens guiem per el cotxe amb més demanda
             for (int j = 0; j < m_klass.size() - 1; j++) {
                 if (m_klass[j].prod > m_klass[j + 1].prod) {
-                    identificador = m_klass[j].id;
-                } else if (m_klass[j].prod < m_klass[j + 1].prod) {
-                    identificador = m_klass[j + 1].id;
+                    solucio[i] = m_klass[j].id;
                 } else {
-                    identificador = m_klass[0].id;
+                    solucio[i] = m_klass[j + 1].id;
                 }
             }
-
-            solucio[i] = identificador;
-            m_klass[i_classe_anterior(identificador, m_klass)].prod--;
-
+            m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         } else {
+            // Sino utilitzem les condicions definides per la funció classe_escollida() per trobar la classe
             solucio[i] = classe_escollida(m_klass, solucio[i - 1]);
             m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         }
+        // Actualitzem la penalització de la solució
         pen_act += penalitzacions(i + 1, solucio, estacions, ne, ce);
     }
 }
