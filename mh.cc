@@ -40,8 +40,7 @@ VI localSearch(VI solparcial, int& pen, const int& cotxes, const VVB& estacions,
     const VI& ne, const VI& ce)
 {
     VI neighbourhood = solparcial;
-    int C = solparcial.size();
-    int pen_n = 0;
+    int C = solparcial.size(), pen_n = 0;
     for (int i = 0; i < C; i++) {
         swap(neighbourhood[cotxes], neighbourhood[i]);
 
@@ -60,8 +59,7 @@ VI localSearch(VI solparcial, int& pen, const int& cotxes, const VVB& estacions,
 double f_i(int f, double lambda, VI& penalitzacio, VI& solparcial, const VVB& estacions)
 {
     // Funcio que calcula la nova funció objectiu
-    int sum = 0;
-    int M = penalitzacio.size();
+    int sum = 0, M = penalitzacio.size();
     for (int i = 0; i < M; i++) {
         // solparcial[i] = una class 0,1,...,K
         sum += penalitzacio[i] * estacions[solparcial[i]][i];
@@ -74,15 +72,13 @@ VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
 {
     // funcio que copia un interval de la solparcial al vector interval
     // parametre m es la millora tractada
-    int x = a, y = b;
     if (a < 0) {
-        x = 0;
+        a = 0;
     }
     VI interval;
-    int i = x;
-    while (i < b) {
-        interval.push_back(solparcial[i]);
-        ++i;
+    while (a < b) {
+        interval.push_back(solparcial[a]);
+        ++a;
     }
     return interval;
 }
@@ -92,18 +88,17 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
     const VI& ne, const VI& ce)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
-    int pen = 0;
-    int M = ne.size();
-    int C = solucio.size();
+    int pen = 0, M = ne.size(), C = solucio.size();
 
     // vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
 
     // per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++) {
+        int cotxes_millora = 0;
         if (cotxes == C) {
             for (int i = cotxes - ne[m]; i < cotxes; i++) {
-                int cotxes_millora = 0;
+                cotxes_millora = 0;
                 // mirem si l'interval ne té penalitzacions
                 interval = setinterval(i, cotxes, m, solucio, ne);
                 for (int k = 0; k < int(interval.size()); k++) {
@@ -118,7 +113,6 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
                 }
             }
         } else {
-            int cotxes_millora = 0;
             // mirem si l'interval ne té penalitzacions
             interval = setinterval(cotxes - ne[m], cotxes, m, solucio, ne);
             for (int k = 0; k < int(interval.size()); k++) {
@@ -141,22 +135,23 @@ int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
 /* Funció que escull la classe m_klass segons els criteris del greedy. */
 int classe_escollida(const vector<Klass>& m_klass, const int& sol)
 {
-    int K = m_klass.size();
-    // trobem si hi ha valors de produccio igual i si no hi ha un valor
-    int max_prod = 0, escollida = 0, classe = 0;
+    int K = m_klass.size(), max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++) {
-        if (m_klass[i].prod != 0) {
+        //per cada classe mirem si encara queden cotxes per produir
+        if (m_klass[i].prod > 0) {
             if (m_klass[i].prod > max_prod) {
+                //si són més del maxim trobat fins el moment es canvien els valors de max_prod i escollida
                 max_prod = m_klass[i].prod;
-                classe = m_klass[i].id;
-                escollida = classe;
+                escollida = classe = m_klass[i].id;
             } else if (m_klass[i].prod == max_prod) {
-                escollida = classe;
+                //si són els mateixos mirem si la classe del cotxe anterior requeria més millores
                 if (m_klass[i_classe_anterior(sol, m_klass)].millores >= m_klass[classe].millores) {
+                    //mirem si la classe que volem colocar té més millores que la i
                     if (m_klass[i].millores < m_klass[classe].millores) {
                         escollida = m_klass[i].id;
                     }
                 } else {
+                    //si no requeria més i té menys millores que la i actualitzem escollida
                     if (m_klass[i].millores > m_klass[classe].millores) {
                         escollida = m_klass[i].id;
                     }
@@ -183,26 +178,23 @@ void genera_solucio(int& pen_act, vector<Klass>& m_klass, VI& solucio,
     const VVB& estacions, const VI& ne, const VI& ce)
 {
     int C = solucio.size();
-    // comment
     for (int i = 0; i < C; i++) {
         if (i == 0) {
-            int identificador;
+            // Si estem colocant el primer cotxe ens guiem per el cotxe amb més demanda
             for (int j = 0; j < m_klass.size() - 1; j++) {
                 if (m_klass[j].prod > m_klass[j + 1].prod) {
-                    identificador = m_klass[j].id;
-                } else if (m_klass[j].prod < m_klass[j + 1].prod) {
-                    identificador = m_klass[j + 1].id;
+                    solucio[i] = m_klass[j].id;
                 } else {
-                    identificador = m_klass[0].id;
+                    solucio[i] = m_klass[j + 1].id;
                 }
             }
-
-            solucio[i] = identificador;
-            m_klass[i_classe_anterior(identificador, m_klass)].prod--;
+            m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         } else {
+            // Sino utilitzem les condicions definides per la funció classe_escollida() per trobar la classe
             solucio[i] = classe_escollida(m_klass, solucio[i - 1]);
             m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         }
+        // Actualitzem la penalització de la solució
         pen_act += penalitzacions(i + 1, solucio, estacions, ne, ce);
     }
 }
@@ -213,19 +205,6 @@ void genera_solucio(int& pen_act, vector<Klass>& m_klass, VI& solucio,
 bool SortMillores(const Klass& a, const Klass& b)
 {
     return a.millores < b.millores;
-}
-
-// -no la utilitzem no?
-int f(const VI& produccio)
-{
-    int k = 0;
-    int P = produccio.size();
-    for (int i = 1; i < P; i++) {
-        if (produccio[i] > produccio[k]) {
-            k = i;
-        }
-    }
-    return k;
 }
 
 /*
