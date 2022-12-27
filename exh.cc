@@ -40,16 +40,14 @@ parcial i vector de nombre màxim de millores ne.
 */
 VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
 {
-    int x = a;
     if (a < 0) {
         // Si la posició inicial és menor que 0, redefinim x=0
-        x = 0;
+        a = 0;
     }
     VI interval;
-    int i = x;
-    while (i < b) {
-        interval.push_back(solparcial[i]);
-        ++i;
+    while (a < b) {
+        interval.push_back(solparcial[a]);
+        ++a;
     }
     return interval;
 }
@@ -67,9 +65,10 @@ int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
     VI interval;
     // Per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++) {
+        int cotxes_millora = 0;
         if (cotxes == C) {
             for (int i = cotxes - ne[m]; i < cotxes; i++) {
-                int cotxes_millora = 0;
+                cotxes_millora = 0;
                 // Mirem si l'interval ne té penalitzacions
                 interval = setinterval(i, cotxes, m, solparcial, ne);
                 for (int k = 0; k < int(interval.size()); k++) {
@@ -84,7 +83,6 @@ int penalitzacions(int cotxes, const VI& solparcial, const VVB& estacions,
                 }
             }
         } else {
-            int cotxes_millora = 0;
             interval = setinterval(cotxes - ne[m], cotxes, m, solparcial, ne);
             for (int k = 0; k < int(interval.size()); k++) {
                 if (estacions[interval[k]][m]) {
@@ -170,8 +168,6 @@ int main(int argc, char** argv)
             f >> aplica_millora;
             if (aplica_millora)
                 estacions[i][j] = true;
-            else
-                estacions[i][j] = false;
         }
     }
     // Es defineixen solucio parcial i final que utlitzara la funcio de backtracking
