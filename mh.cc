@@ -39,8 +39,7 @@ penalitzacio final (pen_max) i la solució final (solucio).
 void sortida()
 {
     ofstream out(output);
-    double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
-    out << pen_max << ' ' << temps << endl;
+    out << pen_max << ' ' << (clock() - inici) / (double)CLOCKS_PER_SEC << endl;
     for (auto x : solucio)
         out << x << " ";
     out << endl;
@@ -73,10 +72,8 @@ int penalitzacions(int cotxes, const VI &solucio_actual)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
     int pen = 0;
-
     // vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
-
     // per cada millora m recorrem totes les seves classes k
     for (int m = 0; m < M; m++)
     {
@@ -95,7 +92,6 @@ int penalitzacions(int cotxes, const VI &solucio_actual)
                         cotxes_millora++;
                     }
                 }
-
                 // si el nombre de cotxes consecutius és major que el màxim permès
                 if (cotxes_millora > ce[m])
                 {
@@ -114,7 +110,6 @@ int penalitzacions(int cotxes, const VI &solucio_actual)
                     cotxes_millora++;
                 }
             }
-
             // si el nombre de cotxes consecutius és major que el màxim permès
             if (cotxes_millora > ce[m])
             {
