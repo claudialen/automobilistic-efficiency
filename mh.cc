@@ -9,7 +9,8 @@ using namespace std;
 ofstream out;
 
 /* Per a l'algortime de metaheurística hem decidit utilitzar el Guided Local
-Search perquè ...
+Search perquè la seva estructura era molt semblant a la del propi problema plantejat, el que ens permetia adaptar-lo facilment ja 
+que només requeria redefinir els parametres de la metaheurística pels propis del problema que ja haviem definit pels anteriors algoritmes.
 */
 
 using VI = vector<int>;
@@ -23,7 +24,16 @@ struct Klass {
 };
 
 int MAX_VAL = 1000000;
+int C, M, K;
+VI ce(M), ne(M);
+VVB estacions(K, VB(M, false));
+vector<Klass> m_klass(K);
 
+/*
+Funció que escriu la solució final sobre el fitxer sortida.
+Paràmetres: nom del fitxer sortda (output), algoritme d'inici (inici),
+penalitzacio final (pen_max) i la solució final (solucio).
+*/
 void sortida(string output, int inici, const int& pen_act, const VI& solucio)
 {
     ofstream out(output);
@@ -35,44 +45,54 @@ void sortida(string output, int inici, const int& pen_act, const VI& solucio)
     out.close();
 }
 
-/* Funció que fa servir cerca local per calcula una solució. */
-VI localSearch(VI solparcial, int& pen, const int& cotxes, const VVB& estacions,
-    const VI& ne, const VI& ce)
+/* 
+Funció que fa servir cerca local per calcula una solució. 
+*/
+VI localSearch(VI solparcial, int &pen, const int &cotxes, const VVB &estacions, const VI &ne, const VI &ce)
 {
-    VI neighbourhood = solparcial;
     int C = solparcial.size(), pen_n = 0;
-    for (int i = 0; i < C; i++) {
-        swap(neighbourhood[cotxes], neighbourhood[i]);
-
-        for (int j = 0; j < C; j++) {
-            pen_n += penalitzacions(j + 1, neighbourhood, estacions, ne, ce);
-        }
-        if (pen_n < pen) {
-            solparcial = neighbourhood;
-            pen = pen_n;
+    for (int i = 0; i < C; i++)
+    {
+        if (solparcial[cotxes] != solparcial[i])
+        {
+            VI neighbourhood = solparcial;
+            // Quan la posició de la solució en la que ens trobem i la posició i són diferents les intercanviem per crear una solució veïna
+            swap(neighbourhood[cotxes], neighbourhood[i]);
+            // Calculem la penalització de la nova solució
+            for (int j = 0; j < C; j++)
+            {
+                pen_n += penalitzacions(j + 1, neighbourhood, estacions, ne, ce);
+            }
+            if (pen_n < pen)
+            {
+                // Si la nova solució és millor definim nova_sol i pen
+                VI nova_sol = neighbourhood;
+                pen = pen_n;
+            }
         }
     }
-    return solparcial;
+    return nova_sol;
 }
 
-/* Funció que calcula la nova funció objectiu. */
+/*
+Funció que calcula la nova funció objectiu. 
+*/
 double f_i(int f, double lambda, VI& penalitzacio, VI& solparcial, const VVB& estacions)
 {
-    // Funcio que calcula la nova funció objectiu
     int sum = 0, M = penalitzacio.size();
     for (int i = 0; i < M; i++) {
-        // solparcial[i] = una class 0,1,...,K
         sum += penalitzacio[i] * estacions[solparcial[i]][i];
     }
-    // no se quin regularization factor (lambda) definir
     return f + lambda * sum;
 }
 
+/*
+Funció que defineix un interval de la solució donada de llargada ne
+*/
 VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
 {
-    // funcio que copia un interval de la solparcial al vector interval
-    // parametre m es la millora tractada
     if (a < 0) {
+        // En cas que el valor entrat sigui menor a 0 (intervals incomplets)
         a = 0;
     }
     VI interval;
@@ -83,7 +103,9 @@ VI setinterval(int a, int b, int m, const VI& solparcial, const VI& ne)
     return interval;
 }
 
-/* Funció que calcula el nombre de penalitzacions. */
+/* 
+Funció que calcula el nombre de penalitzacions. 
+*/
 int penalitzacions(int cotxes, const VI& solucio, const VVB& estacions,
     const VI& ne, const VI& ce)
 {
@@ -162,8 +184,10 @@ int classe_escollida(const vector<Klass>& m_klass, const int& sol)
     return escollida;
 }
 
-/* Funció utilizada per identificar la posició de la classe m_klass sobre el
-vector de solució. */
+/* 
+Funció utilizada per identificar la posició de la classe m_klass sobre el
+vector de solució. 
+*/
 int i_classe_anterior(int sol, const vector<Klass>& m_klass)
 {
     int i = 0;
@@ -173,7 +197,10 @@ int i_classe_anterior(int sol, const vector<Klass>& m_klass)
     return i;
 }
 
-/* Funció que genera una solució seguint l'algoritme greedy. */
+
+/*
+Funció principal de l'algoritme greedy
+*/
 void genera_solucio(int& pen_act, vector<Klass>& m_klass, VI& solucio,
     const VVB& estacions, const VI& ne, const VI& ce)
 {
@@ -188,17 +215,15 @@ void genera_solucio(int& pen_act, vector<Klass>& m_klass, VI& solucio,
                     solucio[i] = m_klass[j + 1].id;
                 }
             }
-            m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         } else {
             // Sino utilitzem les condicions definides per la funció classe_escollida() per trobar la classe
             solucio[i] = classe_escollida(m_klass, solucio[i - 1]);
-            m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         }
         // Actualitzem la penalització de la solució
+        m_klass[i_classe_anterior(solucio[i], m_klass)].prod--;
         pen_act += penalitzacions(i + 1, solucio, estacions, ne, ce);
     }
 }
-
 //···················································//
 
 /* Funció utilitzada per ordenar les classes segons el nombre de millores. */
@@ -218,13 +243,15 @@ void guided_local_search(int cotxes, VI& solparcial, VI& solucio,
     vector<Klass> m_klass, int pen_act, int& pen_max, const VVB& estacions,
     const VI& ne, const VI& ce, const string output, const int inici)
 {
+    //generem la solució inicial
     genera_solucio(pen_act, m_klass, solparcial, estacions, ne, ce);
     int C = solparcial.size();
+    // Calculem la penalització de la solució inicial
     for (int j = 0; j < C; j++) {
         pen_act += penalitzacions(j + 1, solparcial, estacions, ne, ce);
     }
     VI penalitzacio(C, 0);
-    double lambda = 0.1;
+    double lambda = 0.1; // Hem trobat que aquesta lambda era la que ajudava més a trobar la solució
     pen_max = f_i(pen_act, lambda, penalitzacio, solparcial, estacions);
     while (cotxes < C) {
         // Millor solució fins al moment sobre la funció objectiu original
@@ -232,12 +259,13 @@ void guided_local_search(int cotxes, VI& solparcial, VI& solucio,
         // Busquem solparcial amb local search per optimitzar f_i
         solparcial = localSearch(solparcial, pen_act, cotxes, estacions, ne, ce);
         if (pen_max > pen_act) {
+            // Si la penalització de la solució s_f és major redefinim solucio i pen_max
             pen_max = pen_act;
             solucio = solparcial;
         } else {
             solucio = s_f;
         }
-        // Actualitzar vector de penalitzacions
+        // Actualitzem el vector de penalitzacions
         penalitzacio[cotxes] = penalitzacions(cotxes + 1, solparcial, estacions, ne, ce);
         pen_act += penalitzacio[cotxes];
         sortida(output, inici, pen_max, solucio);
@@ -245,22 +273,11 @@ void guided_local_search(int cotxes, VI& solparcial, VI& solucio,
     }
 }
 
-int main(int argc, char** argv)
-{
-    // Es llegeixen input de fitxers
-    int inici = clock();
-    string input = string(argv[1]);
-    string output = string(argv[2]);
+void llegir_dades(string input){
     ifstream f(input);
-
-    int C, M, K;
     f >> C >> M >> K;
     // Creacio vectors de millores, matriu booleana de cada estacio i vector de
     // l'estructura Klass amb les millores de cada classe
-    VI ce = VI(M);
-    VI ne = VI(M);
-    VVB estacions = VVB(K, VB(M, false));
-    vector<Klass> m_klass(K);
 
     // Inicialitzacio d'estructures
     for (int i = 0; i < M; i++) {
@@ -283,19 +300,26 @@ int main(int argc, char** argv)
             if (aplica_millora) {
                 estacions[classe][j] = true;
                 m_klass[classe].millores++;
-            } else
-                estacions[classe][j] = false;
+            }
         }
     }
+}
+    
 
+int main(int argc, char** argv)
+{
+    // Es llegeixen input de fitxers
+    int inici = clock();
+    string input = string(argv[1]), output = string(argv[2]);
+
+    llegir_dades(input);
+    
     // Es defineix la solucio final i parcial
     VI solparcial(C, 0), solucio(C, 0);
 
     // S'ordena el vector de millores en ordre descendent per nombre d'elles
     sort(m_klass.begin(), m_klass.end(), SortMillores);
-
-    int cotxes = 0, pen_act = 0, pen_max = MAX_VAL;
-    guided_local_search(cotxes, solparcial, solucio, m_klass, pen_act, pen_max,
+    guided_local_search(0, solparcial, solucio, m_klass, 0, MAX_VAL,
         estacions, ne, ce, output, inici);
     f.close();
 }
