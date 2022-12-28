@@ -26,7 +26,7 @@ struct Klass
 
 int MAX_VAL = 1000000;
 int C, M, K;
-VI ce, ne;
+VI ce, ne, solucio;
 VVB estacions;
 vector<Klass> m_klass;
 
@@ -35,7 +35,7 @@ Funció que escriu la solució final sobre el fitxer sortida.
 Paràmetres: nom del fitxer sortda (output), algoritme d'inici (inici),
 penalitzacio final (pen_max) i la solució final (solucio).
 */
-void sortida(string output, int inici, const int &pen_act, const VI &solucio)
+void sortida(string output, int inici, const int &pen_act)
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
@@ -68,10 +68,10 @@ VI setinterval(int a, int b, int m, const VI &solparcial)
 /*
 Funció que calcula el nombre de penalitzacions.
 */
-int penalitzacions(int cotxes, const VI &solucio)
+int penalitzacions(int cotxes, const VI &solucio_actual)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
-    int pen = 0, M = ne.size(), C = solucio.size();
+    int pen = 0, M = ne.size(), C = solucio_actual.size();
 
     // vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
@@ -86,7 +86,7 @@ int penalitzacions(int cotxes, const VI &solucio)
             {
                 cotxes_millora = 0;
                 // mirem si l'interval ne té penalitzacions
-                interval = setinterval(i, cotxes, m, solucio);
+                interval = setinterval(i, cotxes, m, solucio_actual);
                 for (int k = 0; k < int(interval.size()); k++)
                 {
                     if (estacions[interval[k]][m])
@@ -225,9 +225,8 @@ int classe_escollida(const int &sol)
 /*
 Funció principal de l'algoritme greedy
 */
-void genera_solucio(int &pen_act, VI &solucio)
+void genera_solucio(int &pen_act, VI &solucio_1)
 {
-    int C = solucio.size();
     for (int i = 0; i < C; i++)
     {
         if (i == 0)
@@ -237,22 +236,22 @@ void genera_solucio(int &pen_act, VI &solucio)
             {
                 if (m_klass[j].prod > m_klass[j + 1].prod)
                 {
-                    solucio[i] = m_klass[j].id;
+                    solucio_1[i] = m_klass[j].id;
                 }
                 else
                 {
-                    solucio[i] = m_klass[j + 1].id;
+                    solucio_1[i] = m_klass[j + 1].id;
                 }
             }
         }
         else
         {
             // Sino utilitzem les condicions definides per la funció classe_escollida() per trobar la classe
-            solucio[i] = classe_escollida(solucio[i - 1]);
+            solucio_1[i] = classe_escollida(solucio_1[i - 1]);
         }
         // Actualitzem la penalització de la solució
-        m_klass[i_classe_anterior(solucio[i])].prod--;
-        pen_act += penalitzacions(i + 1, solucio);
+        m_klass[i_classe_anterior(solucio_1[i])].prod--;
+        pen_act += penalitzacions(i + 1, solucio_1);
     }
 }
 // ···················································//
@@ -270,12 +269,11 @@ Paràmetres: nombre de cotxes afegits a la solució (cotxes), solució actual
 classes (m_klass), penalitzacions actual i millor (pen_act, pen_max), vectors
 d'estacions, ne, ce i variables de sortida i inici.
 */
-void guided_local_search(int cotxes, VI &solparcial, VI &solucio,
+void guided_local_search(int cotxes, VI &solparcial,
                          int pen_act, int &pen_max, const string output, const int inici)
 {
     // generem la solució inicial
     genera_solucio(pen_act, solparcial);
-    int C = solparcial.size();
     // Calculem la penalització de la solució inicial
     for (int j = 0; j < C; j++)
     {
@@ -303,7 +301,7 @@ void guided_local_search(int cotxes, VI &solparcial, VI &solucio,
         // Actualitzem el vector de penalitzacions
         penalitzacio[cotxes] = penalitzacions(cotxes + 1, solparcial);
         pen_act += penalitzacio[cotxes];
-        sortida(output, inici, pen_max, solucio);
+        sortida(output, inici, pen_max);
         ++cotxes;
     }
 }
@@ -360,6 +358,6 @@ int main(int argc, char **argv)
 
     // S'ordena el vector de millores en ordre descendent per nombre d'elles
     sort(m_klass.begin(), m_klass.end(), SortMillores);
-    guided_local_search(0, solparcial, solucio, 0, MAX_VAL,
+    guided_local_search(0, solparcial, 0, MAX_VAL,
                         output, inici);
 }
