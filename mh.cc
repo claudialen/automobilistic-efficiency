@@ -25,21 +25,22 @@ struct Klass
 };
 
 int MAX_VAL = 1000000;
-int C, M, K;
+int C, M, K, pen_max = MAX_VAL, inici;
 VI ce, ne, solucio;
 VVB estacions;
 vector<Klass> m_klass;
+string input, output;
 
 /*
 Funció que escriu la solució final sobre el fitxer sortida.
 Paràmetres: nom del fitxer sortda (output), algoritme d'inici (inici),
 penalitzacio final (pen_max) i la solució final (solucio).
 */
-void sortida(string output, int inici, const int &pen_act)
+void sortida()
 {
     ofstream out(output);
     double temps = (clock() - inici) / (double)CLOCKS_PER_SEC;
-    out << pen_act << ' ' << temps << endl;
+    out << pen_max << ' ' << temps << endl;
     for (auto x : solucio)
         out << x << " ";
     out << endl;
@@ -49,7 +50,7 @@ void sortida(string output, int inici, const int &pen_act)
 /*
 Funció que defineix un interval de la solució donada de llargada ne
 */
-VI setinterval(int a, int b, int m, const VI &solparcial)
+VI setinterval(int a, const int b, const VI &solparcial)
 {
     if (a < 0)
     {
@@ -71,7 +72,7 @@ Funció que calcula el nombre de penalitzacions.
 int penalitzacions(int cotxes, const VI &solucio_actual)
 {
     // nombre de penalitzacions per afegir un nou cotxe a la solparcial
-    int pen = 0, M = ne.size(), C = solucio_actual.size();
+    int pen = 0;
 
     // vector de classes a comptar penalitzacions de la solucio solparcial
     VI interval;
@@ -86,7 +87,7 @@ int penalitzacions(int cotxes, const VI &solucio_actual)
             {
                 cotxes_millora = 0;
                 // mirem si l'interval ne té penalitzacions
-                interval = setinterval(i, cotxes, m, solucio_actual);
+                interval = setinterval(i, cotxes, solucio_actual);
                 for (int k = 0; k < int(interval.size()); k++)
                 {
                     if (estacions[interval[k]][m])
@@ -105,7 +106,7 @@ int penalitzacions(int cotxes, const VI &solucio_actual)
         else
         {
             // mirem si l'interval ne té penalitzacions
-            interval = setinterval(cotxes - ne[m], cotxes, m, solucio);
+            interval = setinterval(cotxes - ne[m], cotxes, solucio_actual);
             for (int k = 0; k < int(interval.size()); k++)
             {
                 if (estacions[interval[k]][m])
@@ -129,7 +130,7 @@ Funció que fa servir cerca local per calcula una solució.
 */
 VI localSearch(VI solparcial, int &pen, const int &cotxes)
 {
-    int C = solparcial.size(), pen_n = 0;
+    int pen_n = 0;
     for (int i = 0; i < C; i++)
     {
         if (solparcial[cotxes] != solparcial[i])
@@ -158,7 +159,7 @@ Funció que calcula la nova funció objectiu.
 */
 double f_i(int f, double lambda, VI &penalitzacio, VI &solparcial)
 {
-    int sum = 0, M = penalitzacio.size();
+    int sum = 0;
     for (int i = 0; i < M; i++)
     {
         sum += penalitzacio[i] * estacions[solparcial[i]][i];
@@ -185,7 +186,7 @@ int i_classe_anterior(int sol)
 /* Funció que escull la classe m_klass segons els criteris del greedy. */
 int classe_escollida(const int &sol)
 {
-    int K = m_klass.size(), max_prod = 0, escollida = 0, classe = 0;
+    int max_prod = 0, escollida = 0, classe = 0;
     for (int i = 0; i < K; i++)
     {
         // per cada classe mirem si encara queden cotxes per produir
@@ -269,8 +270,7 @@ Paràmetres: nombre de cotxes afegits a la solució (cotxes), solució actual
 classes (m_klass), penalitzacions actual i millor (pen_act, pen_max), vectors
 d'estacions, ne, ce i variables de sortida i inici.
 */
-void guided_local_search(int cotxes, VI &solparcial,
-                         int pen_act, int &pen_max, const string output, const int inici)
+void guided_local_search(int cotxes, VI &solparcial, int pen_act)
 {
     // generem la solució inicial
     genera_solucio(pen_act, solparcial);
@@ -301,12 +301,12 @@ void guided_local_search(int cotxes, VI &solparcial,
         // Actualitzem el vector de penalitzacions
         penalitzacio[cotxes] = penalitzacions(cotxes + 1, solparcial);
         pen_act += penalitzacio[cotxes];
-        sortida(output, inici, pen_max);
+        sortida();
         ++cotxes;
     }
 }
 
-void llegir_dades(string input)
+void llegir_dades()
 {
     ifstream f(input);
     f >> C >> M >> K;
@@ -350,14 +350,13 @@ void llegir_dades(string input)
 int main(int argc, char **argv)
 {
     // Es llegeixen input de fitxers
-    int inici = clock();
-    string input = string(argv[1]), output = string(argv[2]);
-
+    inici = clock();
+    input = string(argv[1]), output = string(argv[2]);
+    llegir_dades();
     // Es defineix la solucio final i parcial
-    VI solparcial(C, 0), solucio(C, 0);
-
+    VI solparcial(C, 0);
+    solucio.resize(C, 0);
     // S'ordena el vector de millores en ordre descendent per nombre d'elles
     sort(m_klass.begin(), m_klass.end(), SortMillores);
-    guided_local_search(0, solparcial, 0, MAX_VAL,
-                        output, inici);
+    guided_local_search(0, solparcial, 0);
 }
