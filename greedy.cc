@@ -128,7 +128,7 @@ Funció que escull la classe m_klass segons els criteris del greedy.
 */
 int classe_escollida(const int &sol, const vector<Klass> m_klass)
 {
-    int max_prod = 0, escollida = 0, classe = 0;
+    int max_prod = 0, escollida = 0;
     for (int i = 0; i < m_klass.size(); i++)
     {
         // per cada classe mirem si encara queden cotxes per produir
@@ -138,26 +138,14 @@ int classe_escollida(const int &sol, const vector<Klass> m_klass)
             {
                 // es canvien els valors de max_prod i escollida
                 max_prod = m_klass[i].prod;
-                escollida = classe = m_klass[i].id;
+                escollida = m_klass[i].id;
             }
             else if (m_klass[i].prod == max_prod)
             {
                 // si són els mateixos mirem les millores de la classe anterior
-                if (m_klass[i_classe_anterior(sol, m_klass)].millores >= m_klass[classe].millores)
+                if (m_klass[i_classe_anterior(sol, m_klass)].millores >= m_klass[i].millores && m_klass[i].millores < m_klass[escollida].millores)
                 {
-                    // mirem si la classe a col·locar té més millores que la i
-                    if (m_klass[i].millores < m_klass[classe].millores)
-                    {
-                        escollida = m_klass[i].id;
-                    }
-                }
-                else
-                {
-                    // si té menys millores que la i actualitzem escollida
-                    if (m_klass[i].millores > m_klass[classe].millores)
-                    {
-                        escollida = m_klass[i].id;
-                    }
+                    escollida = m_klass[i].id;
                 }
             }
         }
